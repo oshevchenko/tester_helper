@@ -69,6 +69,7 @@ def main() -> None:
         settings_reset = "False"
 
     output_path.write_text(
+        f'# This file is generated automatically by the script get_git_version.py and should not be edited manually.\n'
         f'VERSION = "{fw_version}"\nLAST_COMMIT_YEAR = {last_commit_year}\nRESET_SETTINGS = {settings_reset}\n',
         encoding="utf-8"
     )

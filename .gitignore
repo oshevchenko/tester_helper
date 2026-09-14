@@ -11,9 +11,9 @@ clocks.txt
 monitor.state
 monitor.trace.log
 
-src/sw_networkmonitor/resources/ui_*.py
-src/sw_networkmonitor/resources/rc_resources.py
-src/sw_networkmonitor/resources/version.py
+src/tester_helper/resources/ui_*.py
+src/tester_helper/resources/rc_resources.py
+src/tester_helper/resources/version.py
 
 *.hdmi
 *.dwifi

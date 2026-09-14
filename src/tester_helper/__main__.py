@@ -45,7 +45,7 @@ from tester_helper.resources.version import VERSION, LAST_COMMIT_YEAR, RESET_SET
 
 
 def main_function():
-    print(f"Starting helper xxx")
+    print(f"Starting helper version {VERSION} (last commit year: {LAST_COMMIT_YEAR})")
 
 
 if __name__ == "__main__":
