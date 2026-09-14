@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tester_helper_bin = "tester_helper.main:main_function"
+tester_helper = "tester_helper.__main__:main_function"
 
 [build-system]
 requires = ["PySide6", "hatchling", "hatch-vcs", "hatch-build-scripts"]  # Include the VCS plugin here
