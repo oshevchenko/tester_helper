@@ -1,0 +1,43 @@
+[project]
+name = "tester_helper"
+dynamic = ["version"]
+dependencies = [
+    "pyside6",
+    "pyside6-addons",
+    "pyside6-essentials",
+    "python-dotenv",
+    "requests",
+    "pyinstaller",
+    "httpx[http2]>=0.27.0",
+]
+
+[project.scripts]
+tester_helper_bin = "tester_helper.main:main_function"
+
+[build-system]
+requires = ["PySide6", "hatchling", "hatch-vcs", "hatch-build-scripts"]  # Include the VCS plugin here
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+# Add generated GUI files ui_*.py and version.py files to *.whl
+ignore-vcs = true
+packages = [
+    "src/tester_helper",
+]
+
+# Script to prepare GUI resources
+[[tool.hatch.build.targets.wheel.hooks.build-scripts.scripts]]
+commands = [
+    "pyside6-project build",
+]
+
+[tool.pyside6-project]
+files = [
+    "src/tester_helper/__main__.py",
+]
+
+[tool.mypy]
+allow_redefinition = true
