@@ -60,20 +60,3 @@ utestpypi:
 
 upypi:
 	$(VENV_BIN_PATH)/python -m twine upload dist/*
-
-# These are obsolete targets. They will be removed in future versions.
-# to add dependencies from requirements.txt to pyproject.toml use command:
-# uv add -r requirements.txt
-#
-
-requirements.txt:
-	@echo "Generating requirements.txt"
-	@echo "Please ensure you have a valid requirements.txt file before running this Makefile."
-	@echo "You can create it by running 'make freeze' in your project directory."
-	python3 -m pip freeze > requirements.txt
-
-freeze:
-	$(VENV_BIN_PATH)/python -m pip freeze > requirements.txt
-	$(VENV_BIN_PATH)/python -m pip freeze --local > requirements-local.txt
-	$(VENV_BIN_PATH)/python -m pip freeze --user > requirements-user.txt
-	$(VENV_BIN_PATH)/python -m pip freeze --all > requirements-all.txt
