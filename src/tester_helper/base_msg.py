@@ -1,15 +1,12 @@
 from PySide6.QtCore import QMutex, QObject, Signal, Slot, QThread, QWaitCondition, QMutexLocker
 import typing
 
-class MsgSendHelper(QObject):
+
+class MsgSendAdaptor(QObject):
     pass
 
-class IMsgProcessor(QObject):
-    def register_msg_sender(self, start_signal: Signal,
-                                result_handler_cb: typing.Callable[[object, str], None]):
-        pass
 
-class MsgProcessor(IMsgProcessor):
+class MsgProcessor(QObject):
     # Signals emitted from the message processor thread back to the message sender.
     # Qt discovers signals from the class definition, not from per-instance assignments.
     # Each MsgProcessor instance still has its own independent signal connections.
@@ -20,8 +17,8 @@ class MsgProcessor(IMsgProcessor):
         self.thread = QThread()
 
 
-    def get_adaptor(self) -> MsgSendHelper:
-        return MsgSendHelper(self)  # Return a new message sender helper for this processor
+    def get_adaptor(self) -> MsgSendAdaptor:
+        return MsgSendAdaptor(self)  # Return a new message sender helper for this processor
 
 
     def start(self):
@@ -52,13 +49,13 @@ class MsgProcessor(IMsgProcessor):
         start_signal.connect(self._process_task)
         self.result_ready.connect(result_handler_cb)
 
-MSG_PROCESS_TIMEOUT_MS = 5000  # Example timeout value in milliseconds
+MSG_PROCESS_TIMEOUT_MS = 10000  # Example timeout value in milliseconds
 
-class MsgSendHelper(QObject):
+class MsgSendAdaptor(QObject):
     # Signal to pass message to the message processor thread
     start_work = Signal(object, str)
 
-    def __init__(self, worker: IMsgProcessor, timeout_ms: int = MSG_PROCESS_TIMEOUT_MS):
+    def __init__(self, worker: MsgProcessor, timeout_ms: int = MSG_PROCESS_TIMEOUT_MS):
         super().__init__()
         self.timeout_ms = timeout_ms
         self.worker = worker

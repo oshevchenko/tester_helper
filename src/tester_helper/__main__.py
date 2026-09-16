@@ -16,7 +16,7 @@ import time
 from PySide6.QtCore import QObject, QThread, Signal, Slot, QMutex, QWaitCondition, QMutexLocker
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 
-from tester_helper.base_msg import MsgSendHelper, MsgProcessor
+from tester_helper.base_msg import MsgSendAdaptor, MsgProcessor
 
 
 
@@ -27,7 +27,7 @@ class ChildWorker(MsgProcessor):
     def process_message(self, message: str) ->  str:
         # Overwrite this method with actual processing logic for child worker
         # result = self.ext_send_message_sync(message)  # Trigger the other worker
-        print(f"received message in child worker: {message}")
+        print(f"received message in ChildWorker: {message}")
         time.sleep(1)  # Simulate slow task
 
         return f"Child Processed: {message.lower()}"
@@ -37,7 +37,7 @@ child_worker = ChildWorker()  # Create an instance of the child worker
 class GrandChildWorker(MsgProcessor):
     def __init__(self, parent_worker: ChildWorker):
         super().__init__()
-        self.parent_worker = parent_worker
+        # self.parent_worker = parent_worker
         self.parent_worker_adaptor = parent_worker.get_adaptor()  # Get the adaptor for the parent worker
 
     def process_message(self, message: str) ->  str:
@@ -51,6 +51,7 @@ class GrandChildWorker(MsgProcessor):
         return f"Grandchild Processed: {result.lower()}"
 
 grandchild_worker = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker
+grandchild_worker2 = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker
 # 2. Main Window managing the thread lifecycle
 class MainWindow(QMainWindow):
     # Signal to pass work to the worker thread
@@ -84,6 +85,7 @@ class MainWindow(QMainWindow):
         # Thread & Worker Setup
         self.child_worker_adaptor = child_worker.get_adaptor()
         self.grandchild_worker_adaptor = grandchild_worker.get_adaptor()
+        self.grandchild_worker2_adaptor = grandchild_worker2.get_adaptor()
         self.setup_thread()
 
 
@@ -94,9 +96,11 @@ class MainWindow(QMainWindow):
         # grandchild_worker.start()  # Start the worker thread
         child_worker.start()  # Start the child worker thread
         grandchild_worker.start()  # Start the grandchild worker thread
+        grandchild_worker2.start()  # Start the grandchild worker thread
 
         print("id for worker1:", id(child_worker.result_ready))
         print("id for worker2:", id(grandchild_worker.result_ready))
+        print("id for worker3:", id(grandchild_worker2.result_ready))
 
     def trigger_worker(self):
         self.button.setEnabled(False)
@@ -110,7 +114,8 @@ class MainWindow(QMainWindow):
         self.label2.setText("Status: Processing in thread2...")
 
         # Safely send data across thread boundaries
-        self.grandchild_worker_adaptor.send_msg("hello from main thread2")  # Trigger the second worker
+        self.grandchild_worker_adaptor.send_msg("hello to gch1 from main thread2")  # Trigger the second worker
+        self.grandchild_worker2_adaptor.send_msg("hello to gch2 from main thread2")  # Trigger the second worker
 
     # @Slot(object, str)
     def handle_result(self, result: str):
