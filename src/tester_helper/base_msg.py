@@ -16,6 +16,7 @@ class MsgProcessor(IMsgProcessor):
     def __init__(self):
         super().__init__()
         self.thread = QThread()
+        self.adaptor = MsgSendHelper(self)  # Create a message sender helper for this processor
 
 
     def start(self):
@@ -60,26 +61,41 @@ class MsgSendHelper(QObject):
         self._mutex = QMutex()
         self._condition = QWaitCondition()
         self.result = None
+        self._result_handler_ext_cb = []  # List of external result handler callbacks
 
 
     @Slot(object, str)
     def _handle_result(self, sender, result: str):
         with QMutexLocker(self._mutex):
             if sender is self:
-                # print(f"MsgSendHelper: Result from worker: {result}")
+                print(f"_handle_result: {result}")
                 self.result = result
                 self._condition.wakeAll()
+                print(f"_handle_result: Woke up waiting thread with result: {result}")
+                for cb in self._result_handler_ext_cb:
+                    cb(result)
 
 
-    def send_msg_sync(self, message: str = "hello trigger_worker") -> typing.Optional[str]:
+    def send_msg_sync(self, message: str = "sync msg") -> typing.Optional[str]:
         # Safely send data across thread boundaries
         # print(f"Triggering worker with message: {message}")
         with QMutexLocker(self._mutex):
+            print("qt current thread object:", QThread.currentThread())
+            # print("qt thread id:", int(QThread.currentThreadId()))
             self.start_work.emit(self, message)
             success = self._condition.wait(self._mutex, self.timeout_ms)
             if not success:
                 raise TimeoutError("Timeout waiting for worker response.")
             return self.result
+
+
+    def send_msg(self, message: str = "async msg"):
+        # Asynchronous message sending without waiting for a response
+        self.start_work.emit(self, message)
+
+
+    def register_result_handler_cb(self, result_handler_cb: typing.Callable[[str], None]):
+        self._result_handler_ext_cb.append(result_handler_cb)
 
 
     def set_timeout(self, timeout_ms: int):
