@@ -38,6 +38,7 @@ class GrandChildWorker(MsgProcessor):
     def __init__(self, parent_worker: ChildWorker):
         super().__init__()
         self.parent_worker = parent_worker
+        self.parent_worker_adaptor = parent_worker.get_adaptor()  # Get the adaptor for the parent worker
 
     def process_message(self, message: str) ->  str:
         # Overwrite this method with actual processing logic for child worker
@@ -45,7 +46,7 @@ class GrandChildWorker(MsgProcessor):
         print(f"received message in grandchild worker: {message}")
         time.sleep(1)  # Simulate slow task
         print(f"Calling child worker from grandchild worker with message: {message}")
-        result = self.parent_worker.adaptor.send_msg_sync(message)  # Trigger the child worker
+        result = self.parent_worker_adaptor.send_msg_sync(message)  # Trigger the child worker
 
         return f"Grandchild Processed: {result.lower()}"
 
@@ -81,12 +82,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
         # Thread & Worker Setup
+        self.child_worker_adaptor = child_worker.get_adaptor()
+        self.grandchild_worker_adaptor = grandchild_worker.get_adaptor()
         self.setup_thread()
+
 
     def setup_thread(self):
         # Connect Worker signals -> UI slots
-        child_worker.adaptor.register_result_handler_cb(self.handle_result)
-        grandchild_worker.adaptor.register_result_handler_cb(self.handle_result2)
+        self.child_worker_adaptor.register_result_handler_cb(self.handle_result)
+        self.grandchild_worker_adaptor.register_result_handler_cb(self.handle_result2)
         # grandchild_worker.start()  # Start the worker thread
         child_worker.start()  # Start the child worker thread
         grandchild_worker.start()  # Start the grandchild worker thread
@@ -99,14 +103,14 @@ class MainWindow(QMainWindow):
         self.label.setText("Status: Processing in thread...")
         # Safely send data across thread boundaries
         # self.start_work.emit(self, "hello from main thread")
-        child_worker.adaptor.send_msg("hello from main thread")  # Trigger the first worker
+        self.child_worker_adaptor.send_msg("hello from main thread")  # Trigger the first worker
 
     def trigger_worker2(self):
         self.button2.setEnabled(False)
         self.label2.setText("Status: Processing in thread2...")
 
         # Safely send data across thread boundaries
-        grandchild_worker.adaptor.send_msg("hello from main thread2")  # Trigger the second worker
+        self.grandchild_worker_adaptor.send_msg("hello from main thread2")  # Trigger the second worker
 
     # @Slot(object, str)
     def handle_result(self, result: str):

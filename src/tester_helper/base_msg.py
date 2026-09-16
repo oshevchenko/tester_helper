@@ -1,6 +1,8 @@
 from PySide6.QtCore import QMutex, QObject, Signal, Slot, QThread, QWaitCondition, QMutexLocker
 import typing
 
+class MsgSendHelper(QObject):
+    pass
 
 class IMsgProcessor(QObject):
     def register_msg_sender(self, start_signal: Signal,
@@ -16,7 +18,10 @@ class MsgProcessor(IMsgProcessor):
     def __init__(self):
         super().__init__()
         self.thread = QThread()
-        self.adaptor = MsgSendHelper(self)  # Create a message sender helper for this processor
+
+
+    def get_adaptor(self) -> MsgSendHelper:
+        return MsgSendHelper(self)  # Return a new message sender helper for this processor
 
 
     def start(self):
