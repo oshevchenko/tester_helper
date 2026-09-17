@@ -51,15 +51,10 @@ busctl --user call \
         return "OK"
 
 
-class DbusChildWorker(QObject):
-    """ D-Bus child worker to send D-Bus messages to 'child_worker'.
-        If I add the ChildWorkerDbusAdaptor to the 'child_worker' directly, it will run
-        in the same thread as 'process_message' method and block the D-Bus event loop.
-    """
-    def __init__(self, msg_adaptor: MsgSendAdaptor):
+class DbusWorker(QObject):
+    def __init__(self):
         super().__init__()
         self.thread = QThread()
-        self.dbus_adaptor = ChildWorkerDbusAdaptor(self, msg_adaptor)  # Create the D-Bus adaptor for this worker
 
 
     def start(self):
@@ -70,6 +65,16 @@ class DbusChildWorker(QObject):
     def stop(self):
         self.thread.quit()
         self.thread.wait()
+
+
+class DbusChildWorker(DbusWorker):
+    """ D-Bus child worker to send D-Bus messages to 'child_worker'.
+        If I add the ChildWorkerDbusAdaptor to the 'child_worker' directly, it will run
+        in the same thread as 'process_message' method and block the D-Bus event loop.
+    """
+    def __init__(self, msg_adaptor: MsgSendAdaptor):
+        super().__init__()
+        self.dbus_adaptor = ChildWorkerDbusAdaptor(self, msg_adaptor)  # Create the D-Bus adaptor for this worker
 
 
 dbus_child_worker = DbusChildWorker(child_worker.get_adaptor())  # Create an instance of the D-Bus child worker

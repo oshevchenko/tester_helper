@@ -3,7 +3,6 @@ from tester_helper.base_msg import MsgProcessor
 from PySide6.QtCore import QObject, QThread
 import time
 from datetime import datetime
-# from tester_helper.dbus_api import ChildWorkerDbusAdaptor
 
 class ChildWorker(MsgProcessor):
     def __init__(self):
@@ -23,29 +22,6 @@ class ChildWorker(MsgProcessor):
 
 child_worker = ChildWorker()  # Create an instance of the child worker
 
-# class DbusChildWorker(QObject):
-#     """ D-Bus child worker to send D-Bus messages to 'child_worker'.
-#         If I add the ChildWorkerDbusAdaptor to the 'child_worker' directly, it will run
-#         in the same thread as 'process_message' method and block the D-Bus event loop.
-#     """
-#     def __init__(self, parent_worker: MsgProcessor):
-#         super().__init__()
-#         self.thread = QThread()
-#         self.parent_worker_adaptor = parent_worker.get_adaptor()  # Get the message adaptor for the parent worker
-#         self.dbus_adaptor = ChildWorkerDbusAdaptor(self, self.parent_worker_adaptor)  # Create the D-Bus adaptor for this worker
-
-
-#     def start(self):
-#         self.moveToThread(self.thread)
-#         self.thread.start()
-
-
-#     def stop(self):
-#         self.thread.quit()
-#         self.thread.wait()
-
-
-# dbus_child_worker = DbusChildWorker(child_worker)  # Create an instance of the D-Bus child worker
 
 class GrandChildWorker(MsgProcessor):
     def __init__(self, parent_worker: ChildWorker):
