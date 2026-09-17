@@ -19,7 +19,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayou
 from tester_helper.base_msg import MsgSendAdaptor, MsgProcessor
 from tester_helper.dbus_adaptor import main as dbus_main
 from tester_helper.workers import child_worker, grandchild_worker, grandchild_worker2
-from tester_helper.dbus_api import dbus_child_worker
+from tester_helper.dbus_api import dbus_child_worker, dbus_grandchild_worker
 from PySide6.QtDBus import QDBusConnection, QDBusAbstractAdaptor
 
 # 2. Main Window managing the thread lifecycle
@@ -128,11 +128,17 @@ def main_function():
         print(f"Failed to register D-Bus object path '{object_path}'.")
         sys.exit(1)
 
+    object_path_grandchild = "/com/sapling/GrandchildWorker"
+    if not bus.registerObject(object_path_grandchild, dbus_grandchild_worker):
+        print(f"Failed to register D-Bus object path '{object_path_grandchild}'.")
+        sys.exit(1)
+
     print(f"D-Bus Service '{service_name}' running at '{object_path}'")
     child_worker.start()  # Start the child worker thread
     grandchild_worker.start()  # Start the grandchild worker thread
     grandchild_worker2.start()  # Start the grandchild worker thread
     dbus_child_worker.start()  # Start the D-Bus child worker thread
+    dbus_grandchild_worker.start()  # Start the D-Bus grandchild worker thread
 
     sys.exit(app.exec())
 
