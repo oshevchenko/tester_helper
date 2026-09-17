@@ -1,13 +1,13 @@
 import sys
 import signal
-from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot, QTimer
+from PySide6.QtCore import ClassInfo, QCoreApplication, QObject, Signal, Slot, QTimer
 from PySide6.QtDBus import QDBusConnection, QDBusAbstractAdaptor
 
 # 1. Define the D-Bus Adaptor
+@ClassInfo({'D-Bus Interface': "com.sapling.MqttDaemon.Control"})
 class MqttDaemonAdaptor(QDBusAbstractAdaptor):
     # D-Bus Interface metadata
     # The interface name external clients will target
-    Q_CLASSINFO = {"D-Bus Interface": "com.yourcompany.MqttDaemon.Control"}
 
     # Signal exposed over D-Bus
     messageReceived = Signal(str, str)  # args: topic, payload
@@ -61,14 +61,14 @@ def main():
     bus = QDBusConnection.sessionBus()
 
     # Request a unique service name on D-Bus
-    service_name = "com.yourcompany.MqttDaemon"
+    service_name = "com.sapling.MqttDaemon"
     if not bus.registerService(service_name):
         print(f"Failed to register D-Bus service '{service_name}'. Is another instance running?")
         sys.exit(1)
 
     # Register object path on the bus
     service = MqttService()
-    object_path = "/com/yourcompany/MqttDaemon"
+    object_path = "/com/sapling/MqttDaemon"
     
     if not bus.registerObject(object_path, service):
         print(f"Failed to register D-Bus object path '{object_path}'.")

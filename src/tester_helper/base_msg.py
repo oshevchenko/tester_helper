@@ -41,6 +41,7 @@ class MsgProcessor(QObject):
         # Heavy computation or I/O running on worker thread
         result = self.process_message(message)
         # Send result back
+        # print(f"_process_task: Emitting result_ready signal with result: {result}")
         self.result_ready.emit(sender, is_sync, result)
 
 

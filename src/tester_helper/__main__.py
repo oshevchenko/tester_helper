@@ -17,51 +17,11 @@ from PySide6.QtCore import QObject, QThread, Signal, Slot, QMutex, QWaitConditio
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 
 from tester_helper.base_msg import MsgSendAdaptor, MsgProcessor
+from tester_helper.dbus_adaptor import main as dbus_main
+from tester_helper.workers import child_worker, grandchild_worker, grandchild_worker2
+from tester_helper.dbus_api import dbus_child_worker
+from PySide6.QtDBus import QDBusConnection, QDBusAbstractAdaptor
 
-
-
-class ChildWorker(MsgProcessor):
-    def __init__(self):
-        super().__init__()
-
-    def process_message(self, message: str) ->  str:
-        """ Called either on pressing the button 1 
-        or when triggered by the grandchild worker.
-        """
-        print(f"received message in ChildWorker: {message}")
-        time.sleep(1)  # Simulate slow task
-        # add time to message
-        message = f"{message} at {datetime.now().strftime('%H:%M:%S')}"
-        return f"Child Processed: {message.lower()}"
-
-child_worker = ChildWorker()  # Create an instance of the child worker
-
-class GrandChildWorker(MsgProcessor):
-    def __init__(self, parent_worker: ChildWorker):
-        super().__init__()
-        self.parent_worker_adaptor = parent_worker.get_adaptor()  # Get the adaptor for the parent worker
-        self.parent_worker_adaptor.register_result_handler_cb(self.handle_parent_async_result)  # Register a callback to handle results from the parent worker
-
-    def handle_parent_async_result(self, result: str):
-        print(f"GrandChildWorker received async result from parent worker: {result}")
-        # You can add additional logic here to handle the result if needed
-
-    def process_message(self, message: str) ->  str:
-        """ Called on pressing the button 2."""
-        # print(f"received message in grandchild worker: {message}")
-        time.sleep(1)  # Simulate slow task
-        # print(f"Calling child worker from grandchild worker with message: {message}")
-        print("1")
-        self.parent_worker_adaptor.send_msg("async message")  # Trigger the child worker
-        self.parent_worker_adaptor.send_msg("async message")  # Trigger the child worker
-        print("2")
-        result = self.parent_worker_adaptor.send_msg_sync(message)  # Trigger the child worker
-        print("3")
-
-        return f"Grandchild Processed sync: {result.lower()}"
-
-grandchild_worker = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker
-grandchild_worker2 = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker
 # 2. Main Window managing the thread lifecycle
 class MainWindow(QMainWindow):
 
@@ -96,14 +56,12 @@ class MainWindow(QMainWindow):
         self.setup_thread()
 
 
+
     def setup_thread(self):
         # Connect Worker signals -> UI slots
         self.child_worker_adaptor.register_result_handler_cb(self.handle_result)
         self.grandchild_worker_adaptor.register_result_handler_cb(self.handle_result2)
         # grandchild_worker.start()  # Start the worker thread
-        child_worker.start()  # Start the child worker thread
-        grandchild_worker.start()  # Start the grandchild worker thread
-        grandchild_worker2.start()  # Start the grandchild worker thread
 
 
     def trigger_worker(self):
@@ -153,7 +111,31 @@ def main_function():
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
+
+    bus = QDBusConnection.sessionBus()
+    service_name = "com.sapling.ChildWorker"
+    if not bus.registerService(service_name):
+        print(f"Failed to register D-Bus service '{service_name}'. Is another instance running?")
+        sys.exit(1)
+
+    # Register object path on the bus
+
+    object_path = "/com/sapling/ChildWorker"
+    # child_worker_dbus_adaptor = ChildWorkerDbusAdaptor(child_worker)
+    # child_worker.register_dbus_adaptor(child_worker_dbus_adaptor)  # Register the adaptor with the worker
+
+    if not bus.registerObject(object_path, dbus_child_worker):
+        print(f"Failed to register D-Bus object path '{object_path}'.")
+        sys.exit(1)
+
+    print(f"D-Bus Service '{service_name}' running at '{object_path}'")
+    child_worker.start()  # Start the child worker thread
+    grandchild_worker.start()  # Start the grandchild worker thread
+    grandchild_worker2.start()  # Start the grandchild worker thread
+    dbus_child_worker.start()  # Start the D-Bus child worker thread
+
     sys.exit(app.exec())
 
 if __name__ == "__main__":
     main_function()
+    # dbus_main()
