@@ -7,6 +7,7 @@ from datetime import datetime
 class ChildWorker(MsgProcessor):
     def __init__(self):
         super().__init__()
+        self.dbus_adaptor = None  # Placeholder for the D-Bus adaptor, will be set later
 
 
     def process_message(self, message: str) ->  str:
@@ -18,7 +19,15 @@ class ChildWorker(MsgProcessor):
         # add time to message
         message = f"{message} at {datetime.now().strftime('%H:%M:%S')}"
         print(f"Child Processed: {message.lower()}")
+        if self.dbus_adaptor:
+            # Emit a D-Bus signal to notify external clients
+            self.dbus_adaptor.send_msg(message)
+
         return f"Child Processed: {message.lower()}"
+
+    def register_dbus_adaptor(self, dbus_adaptor):
+        """ Register the D-Bus adaptor with the child worker. """
+        self.dbus_adaptor = dbus_adaptor
 
 child_worker = ChildWorker()  # Create an instance of the child worker
 

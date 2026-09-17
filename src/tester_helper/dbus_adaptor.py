@@ -10,7 +10,7 @@ class MqttDaemonAdaptor(QDBusAbstractAdaptor):
     # The interface name external clients will target
 
     # Signal exposed over D-Bus
-    messageReceived = Signal(str, str)  # args: topic, payload
+    messageProcessed = Signal(str, str)  # args: topic, payload
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -50,7 +50,7 @@ class MqttService(QObject):
     def _simulate_incoming_mqtt(self):
         print("[Daemon] Simulating incoming MQTT payload...")
         # Emit signal through the adaptor onto the D-Bus bus
-        self.adaptor.messageReceived.emit("sensor/temperature", "22.5°C")
+        self.adaptor.messageProcessed.emit("sensor/temperature", "22.5°C")
 
 
 # 3. Application Setup
