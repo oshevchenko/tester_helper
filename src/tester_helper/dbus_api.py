@@ -115,20 +115,20 @@ class DbusGrandchildWorker(MsgProcessor):
         super().__init__()
         self.dbus_adaptor = GrandchildWorkerDbusAdaptor(self, msg_adaptor)  # Create the D-Bus adaptor for this worker
 
-    def process_message(self, message: str) -> str:
-        """ Called when GrandchildWorker wants to send a signal back to the D-Bus clients.
-        To make it possible, we need to register the D-Bus adaptor with the grandchild_worker and emit a signal from here.
-        grandchild_worker.register_dbus_adaptor(dbus_grandchild_worker.get_adaptor())  # Register the adaptor with the grandchild worker
-        The grandchild_worker will then call 'send_msg' method, which will be processed here and emit a D-Bus signal to notify external clients.
-        <grandchild_worker code>
-        if self.dbus_adaptor:
-            self.dbus_adaptor.send_msg(message) # <- this message goes to dbus_grandchild_worker
-        </grandchild_worker code>
-        """
+    # def process_message(self, message: str) -> str:
+    #     """ Called when GrandchildWorker wants to send a signal back to the D-Bus clients.
+    #     To make it possible, we need to register the D-Bus adaptor with the grandchild_worker and emit a signal from here.
+    #     grandchild_worker.register_dbus_adaptor(dbus_grandchild_worker.get_adaptor())  # Register the adaptor with the grandchild worker
+    #     The grandchild_worker will then call 'send_msg' method, which will be processed here and emit a D-Bus signal to notify external clients.
+    #     <grandchild_worker code>
+    #     if self.dbus_adaptor:
+    #         self.dbus_adaptor.send_msg(message) # <- this message goes to dbus_grandchild_worker
+    #     </grandchild_worker code>
+    #     """
 
-        print(f"received message in DbusGrandchildWorker: {message}")
-        self.dbus_adaptor.messageProcessed.emit("dbus/topic", message)  # Emit a D-Bus signal to notify external clients
-        return "OK"
+    #     print(f"received message in DbusGrandchildWorker: {message}")
+    #     self.dbus_adaptor.messageProcessed.emit("dbus/topic", message)  # Emit a D-Bus signal to notify external clients
+    #     return "OK"
 
 
 dbus_child_worker = DbusChildWorker(child_worker.get_adaptor())  # Create an instance of the D-Bus child worker
