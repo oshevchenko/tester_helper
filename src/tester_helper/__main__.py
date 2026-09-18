@@ -21,6 +21,8 @@ from tester_helper.dbus_adaptor import main as dbus_main
 from tester_helper.workers import child_worker, grandchild_worker, grandchild_worker2
 from tester_helper.dbus_api import dbus_child_worker, dbus_grandchild_worker
 from PySide6.QtDBus import QDBusConnection, QDBusAbstractAdaptor
+from PySide6.QtCore import QTimer
+import signal
 
 # 2. Main Window managing the thread lifecycle
 class MainWindow(QMainWindow):
@@ -121,8 +123,6 @@ def main_function():
     # Register object path on the bus
 
     object_path = "/com/sapling/ChildWorker"
-    # child_worker_dbus_adaptor = ChildWorkerDbusAdaptor(child_worker)
-    # child_worker.register_dbus_adaptor(child_worker_dbus_adaptor)  # Register the adaptor with the worker
 
     if not bus.registerObject(object_path, dbus_child_worker):
         print(f"Failed to register D-Bus object path '{object_path}'.")
@@ -139,6 +139,14 @@ def main_function():
     grandchild_worker2.start()  # Start the grandchild worker thread
     dbus_child_worker.start()  # Start the D-Bus child worker thread
     dbus_grandchild_worker.start()  # Start the D-Bus grandchild worker thread
+
+    # Handle UNIX signals gracefully
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
+    signal.signal(signal.SIGTERM, lambda *_: app.quit())
+
+    sig_timer = QTimer()
+    sig_timer.start(500)
+    sig_timer.timeout.connect(lambda: None)
 
     sys.exit(app.exec())
 
