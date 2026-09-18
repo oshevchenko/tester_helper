@@ -26,7 +26,6 @@ class ChildWorker(MsgProcessor):
         return f"Child Processed: {message.lower()}"
 
 
-child_worker = ChildWorker()  # Create an instance of the child worker
 
 
 class GrandChildWorker(MsgProcessor):
@@ -52,6 +51,3 @@ class GrandChildWorker(MsgProcessor):
         print("3")
 
         return f"Grandchild Processed sync: {result.lower()}"
-
-grandchild_worker = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker
-grandchild_worker2 = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker

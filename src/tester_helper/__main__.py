@@ -18,11 +18,27 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayou
 
 from tester_helper.base_msg import MsgSendAdaptor, MsgProcessor
 from tester_helper.dbus_adaptor import main as dbus_main
-from tester_helper.workers import child_worker, grandchild_worker, grandchild_worker2
-from tester_helper.dbus_api import dbus_child_worker, dbus_grandchild_worker
+from tester_helper.workers import ChildWorker, GrandChildWorker
+from tester_helper.dbus_api import DbusChildWorker, DbusGrandchildWorker
 from PySide6.QtDBus import QDBusConnection, QDBusAbstractAdaptor
 from PySide6.QtCore import QTimer
 import signal
+
+child_worker = ChildWorker()  # Create an instance of the child worker
+grandchild_worker = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker
+grandchild_worker2 = GrandChildWorker(child_worker)  # Create an instance of the grandchild worker
+
+child_worker_msg_adaptor = child_worker.get_adaptor()  # Get the MsgSendAdaptor for the child worker
+# Create an instance of the D-Bus child worker.
+# If a message is sent to this worker, it will emit a D-Bus signal.
+dbus_child_worker = DbusChildWorker(child_worker_msg_adaptor)
+dbus_child_worker_msg_adaptor = dbus_child_worker.get_adaptor() # Get the MsgSendAdaptor for the D-Bus child worker
+# Register a callback to send async result to DbusChildWorker message queue
+# It will be processed and emit a D-Bus signal to notify external clients
+child_worker_msg_adaptor.register_result_handler_cb(dbus_child_worker_msg_adaptor.send_msg)
+
+dbus_grandchild_worker = DbusGrandchildWorker(grandchild_worker.get_adaptor())  # Create an instance of the D-Bus grandchild worker
+
 
 # 2. Main Window managing the thread lifecycle
 class MainWindow(QMainWindow):
@@ -103,6 +119,7 @@ class MainWindow(QMainWindow):
         # self.thread.wait()
         child_worker.stop()
         grandchild_worker.stop()
+        grandchild_worker2.stop()
         super().closeEvent(event)
 
 

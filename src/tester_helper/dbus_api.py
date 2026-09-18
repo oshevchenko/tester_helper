@@ -2,7 +2,7 @@ from tester_helper.base_msg import MsgProcessor
 from PySide6.QtCore import ClassInfo, Signal, Slot
 from tester_helper.base_msg import MsgSendAdaptor
 from PySide6.QtDBus import QDBusAbstractAdaptor
-from tester_helper.workers import child_worker, grandchild_worker
+# from tester_helper.workers import child_worker, grandchild_worker
 import time
 
 @ClassInfo({'D-Bus Interface': "com.sapling.ChildWorker"})
@@ -117,15 +117,4 @@ class DbusGrandchildWorker(MsgProcessor):
         super().__init__()
         self.dbus_adaptor = GrandchildWorkerDbusAdaptor(self, msg_adaptor)  # Create the D-Bus adaptor for this worker
 
-
-child_worker_msg_adaptor = child_worker.get_adaptor()  # Get the MsgSendAdaptor for the child worker
-# Create an instance of the D-Bus child worker.
-# If a message is sent to this worker, it will emit a D-Bus signal.
-dbus_child_worker = DbusChildWorker(child_worker_msg_adaptor)
-dbus_child_worker_msg_adaptor = dbus_child_worker.get_adaptor() # Get the MsgSendAdaptor for the D-Bus child worker
-# Register a callback to send async result to DbusChildWorker message queue
-# It will be processed and emit a D-Bus signal to notify external clients
-child_worker_msg_adaptor.register_result_handler_cb(dbus_child_worker_msg_adaptor.send_msg)
-
-dbus_grandchild_worker = DbusGrandchildWorker(grandchild_worker.get_adaptor())  # Create an instance of the D-Bus grandchild worker
 
